@@ -1,21 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Bitcoin & Finance Goal Tracker</title>
+<meta charset="UTF-8" />
+<title>Bitcoin Goal Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
     body {
         background: #0d1117;
-        color: #f0f0f0;
+        color: #f5f5f5;
         font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
         text-align: center;
-        padding: 30px;
     }
 
     h1 {
         color: #f2a900;
         margin-bottom: 20px;
+        font-size: 2rem;
+    }
+
+    button {
+        background: #f2a900;
+        color: black;
+        padding: 12px 25px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 10px;
+    }
+
+    button:hover {
+        background: #ffbf1a;
     }
 
     .goal {
@@ -25,60 +43,51 @@
         width: 90%;
         max-width: 650px;
         margin: 20px auto;
-        box-shadow: 0 0 20px rgba(0,0,0,0.4);
-    }
-
-    input {
-        width: 85%;
-        padding: 12px;
-        margin: 8px 0;
-        border-radius: 10px;
-        border: none;
-        background: #222;
-        color: white;
-        font-size: 15px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.4);
+        animation: fadeIn 0.5s ease;
     }
 
     .progress-wrapper {
+        width: 100%;
+        height: 35px;
         background: #333;
-        height: 40px;
-        border-radius: 25px;
+        border-radius: 30px;
         overflow: hidden;
         margin-top: 15px;
     }
 
     .progress-bar {
         background: #00ff66;
-        height: 100%;
         width: 0%;
+        height: 100%;
         transition: width 0.5s ease;
     }
 
-    .percent {
-        margin-top: 12px;
-        font-size: 18px;
-        color: #c3c3c3;
-    }
-
-    button {
-        padding: 12px 25px;
-        font-size: 16px;
-        border: none;
+    input {
+        width: 90%;
+        padding: 12px;
+        margin: 8px 0;
         border-radius: 10px;
-        background: #f2a900;
-        color: #111;
-        cursor: pointer;
-        margin-top: 20px;
+        background: #1f2733;
+        border: 1px solid #333;
+        color: white;
+        font-size: 15px;
     }
 
-    button:hover {
-        background: #ffbb22;
+    .percent {
+        margin-top: 10px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 </style>
 </head>
 
 <body>
-
 <h1>Bitcoin & Finance Goal Tracker</h1>
 
 <div id="goals"></div>
@@ -86,42 +95,72 @@
 <button onclick="addGoal()">➕ Add Goal</button>
 
 <script>
-let goalCount = 0;
+// Load saved goals
+let goals = JSON.parse(localStorage.getItem("goals") || "[]");
+let goalCount = goals.length;
+
+// Render saved goals
+goals.forEach((g, i) => renderGoal(i + 1, g));
 
 function addGoal() {
     goalCount++;
+    renderGoal(goalCount);
+}
 
+function renderGoal(id, saved = null) {
     let container = document.getElementById("goals");
 
     let html = `
-        <div class="goal" id="goal_${goalCount}">
-            <h3>Goal #${goalCount}</h3>
+    <div class="goal" id="goal_${id}">
+        <h2>Goal #${id}</h2>
 
-            <input id="title_${goalCount}" placeholder="Goal Name (e.g. Buy 1 BTC)">
-            <input id="current_${goalCount}" type="number" placeholder="Current amount" oninput="update(${goalCount})">
-            <input id="target_${goalCount}" type="number" placeholder="Goal amount" oninput="update(${goalCount})">
+        <input id="title_${id}" placeholder="Goal Name (e.g. 1 BTC)" value="${saved?.title || ''}" oninput="saveGoals()">
 
-            <div class="progress-wrapper">
-                <div class="progress-bar" id="bar_${goalCount}"></div>
-            </div>
+        <input id="current_${id}" type="number" step="0.0001" placeholder="Current Amount"
+            value="${saved?.current || ''}" oninput="update(${id})">
 
-            <div class="percent" id="percent_${goalCount}">0% complete</div>
+        <input id="target_${id}" type="number" step="0.0001" placeholder="Goal Amount"
+            value="${saved?.target || ''}" oninput="update(${id})">
+
+        <div class="progress-wrapper">
+            <div class="progress-bar" id="bar_${id}"></div>
         </div>
-    `;
+
+        <div class="percent" id="percent_${id}">0% complete</div>
+    </div>`;
 
     container.insertAdjacentHTML("beforeend", html);
+    update(id);
 }
 
 function update(id) {
-    let current = parseFloat(document.getElementById("current_" + id).value) || 0;
-    let target = parseFloat(document.getElementById("target_" + id).value) || 1;
+    let current = parseFloat(document.getElementById(`current_${id}`).value || 0);
+    let target = parseFloat(document.getElementById(`target_${id}`).value || 1);
 
     let percent = Math.min((current / target) * 100, 100);
+    document.getElementById(`bar_${id}`).style.width = percent + "%";
+    document.getElementById(`percent_${id}`).innerText = percent.toFixed(2) + "% complete";
 
-    document.getElementById("bar_" + id).style.width = percent + "%";
-    document.getElementById("percent_" + id).innerHTML = percent.toFixed(2) + "% complete";
+    saveGoals();
+}
+
+function saveGoals() {
+    let data = [];
+
+    for (let i = 1; i <= goalCount; i++) {
+        if (!document.getElementById(`goal_${i}`)) continue;
+
+        data.push({
+            title: document.getElementById(`title_${i}`).value,
+            current: document.getElementById(`current_${i}`).value,
+            target: document.getElementById(`target_${i}`).value
+        });
+    }
+
+    localStorage.setItem("goals", JSON.stringify(data));
 }
 </script>
 
 </body>
 </html>
+
