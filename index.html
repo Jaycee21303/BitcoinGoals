@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bitcoin & Finance Goal Tracker</title>
+
+<style>
+    body {
+        background: #0d1117;
+        color: #f0f0f0;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 30px;
+    }
+
+    h1 {
+        color: #f2a900;
+        margin-bottom: 20px;
+    }
+
+    .goal {
+        background: #161b22;
+        padding: 25px;
+        border-radius: 15px;
+        width: 90%;
+        max-width: 650px;
+        margin: 20px auto;
+        box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+
+    input {
+        width: 85%;
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 10px;
+        border: none;
+        background: #222;
+        color: white;
+        font-size: 15px;
+    }
+
+    .progress-wrapper {
+        background: #333;
+        height: 40px;
+        border-radius: 25px;
+        overflow: hidden;
+        margin-top: 15px;
+    }
+
+    .progress-bar {
+        background: #00ff66;
+        height: 100%;
+        width: 0%;
+        transition: width 0.5s ease;
+    }
+
+    .percent {
+        margin-top: 12px;
+        font-size: 18px;
+        color: #c3c3c3;
+    }
+
+    button {
+        padding: 12px 25px;
+        font-size: 16px;
+        border: none;
+        border-radius: 10px;
+        background: #f2a900;
+        color: #111;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    button:hover {
+        background: #ffbb22;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>Bitcoin & Finance Goal Tracker</h1>
+
+<div id="goals"></div>
+
+<button onclick="addGoal()">➕ Add Goal</button>
+
+<script>
+let goalCount = 0;
+
+function addGoal() {
+    goalCount++;
+
+    let container = document.getElementById("goals");
+
+    let html = `
+        <div class="goal" id="goal_${goalCount}">
+            <h3>Goal #${goalCount}</h3>
+
+            <input id="title_${goalCount}" placeholder="Goal Name (e.g. Buy 1 BTC)">
+            <input id="current_${goalCount}" type="number" placeholder="Current amount" oninput="update(${goalCount})">
+            <input id="target_${goalCount}" type="number" placeholder="Goal amount" oninput="update(${goalCount})">
+
+            <div class="progress-wrapper">
+                <div class="progress-bar" id="bar_${goalCount}"></div>
+            </div>
+
+            <div class="percent" id="percent_${goalCount}">0% complete</div>
+        </div>
+    `;
+
+    container.insertAdjacentHTML("beforeend", html);
+}
+
+function update(id) {
+    let current = parseFloat(document.getElementById("current_" + id).value) || 0;
+    let target = parseFloat(document.getElementById("target_" + id).value) || 1;
+
+    let percent = Math.min((current / target) * 100, 100);
+
+    document.getElementById("bar_" + id).style.width = percent + "%";
+    document.getElementById("percent_" + id).innerHTML = percent.toFixed(2) + "% complete";
+}
+</script>
+
+</body>
+</html>
